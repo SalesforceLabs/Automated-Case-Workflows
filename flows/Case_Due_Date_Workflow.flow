@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_Email_when_Cases_are_due_within_7_days</name>
+        <label>Send Email when Cases are due within 7 days</label>
+        <locationX>777</locationX>
+        <locationY>617</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Please prioritize fixing the case {!$Record.CaseNumber} as it is due in 7 days. Due Date is {!$Record.Due_Date__c}.</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Owner:User.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Case {!$Record.CaseNumber} has Due Date within 7 days, please resolve it quickly.</stringValue>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <apiVersion>54.0</apiVersion>
+    <description>When a Due Date is assigned to a Case, create a Task for the case owner of priority High and associate it with the Case record with a Due Date same as that of the Case. Email Reminder to be sent to the case owner when the case is 7 days away from the due date.</description>
+    <interviewLabel>Case Due Date Workflow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Case Due Date Workflow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <description>Create a Task when Case is escalated or due date is provided</description>
+        <name>Create_a_Task</name>
+        <label>Create a Task</label>
+        <locationX>632</locationX>
+        <locationY>623</locationY>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>$Record.Due_Date__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>$Record.Owner:User.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <stringValue>Case {!$Record.CaseNumber} assigned to you has a Due Date of {!$Record.Due_Date__c}</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <start>
+        <locationX>557</locationX>
+        <locationY>49</locationY>
+        <connector>
+            <targetReference>Create_a_Task</targetReference>
+        </connector>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>or</filterLogic>
+        <filters>
+            <field>Due_Date__c</field>
+            <operator>GreaterThan</operator>
+            <value>
+                <dateValue>1990-01-01</dateValue>
+            </value>
+        </filters>
+        <object>Case</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <scheduledPaths>
+            <name>Send_notification_when_due_date_of_case_is_within_7_days</name>
+            <connector>
+                <targetReference>Send_Email_when_Cases_are_due_within_7_days</targetReference>
+            </connector>
+            <label>Send notification when due date of case is within 7 days</label>
+            <maxBatchSize>2</maxBatchSize>
+            <offsetNumber>-7</offsetNumber>
+            <offsetUnit>Days</offsetUnit>
+            <recordField>Due_Date__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Obsolete</status>
+    <variables>
+        <name>Today_Date</name>
+        <dataType>Date</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <elementReference>$Flow.CurrentDate</elementReference>
+        </value>
+    </variables>
+</Flow>
